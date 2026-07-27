@@ -5,6 +5,7 @@ import { useId } from "react";
 type TranscriptEditorProps = {
   value: string;
   onChange: (value: string) => void;
+  error?: string;
 };
 
 const PLACEHOLDER = [
@@ -22,10 +23,17 @@ const WARN_AT = 45_000;
 /**
  * Controlled textarea for the full conversation transcript being audited.
  */
-export function TranscriptEditor({ value, onChange }: TranscriptEditorProps) {
+export function TranscriptEditor({
+  value,
+  onChange,
+  error,
+}: TranscriptEditorProps) {
   const id = useId();
   const textareaId = `${id}-transcript`;
   const helperId = `${id}-helper`;
+  const errorId = `${id}-error`;
+
+  const describedBy = error ? `${helperId} ${errorId}` : helperId;
 
   return (
     <div>
@@ -54,12 +62,22 @@ export function TranscriptEditor({ value, onChange }: TranscriptEditorProps) {
         id={textareaId}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        aria-describedby={helperId}
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
         placeholder={PLACEHOLDER}
         maxLength={MAX_LENGTH}
         rows={12}
-        className="mt-2 block w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-sm leading-6 text-zinc-100 placeholder:text-zinc-600 hover:border-zinc-600 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-300 focus:outline-none"
+        className={`mt-2 block w-full resize-y rounded-lg border bg-zinc-900 px-3 py-2 font-mono text-sm leading-6 text-zinc-100 placeholder:text-zinc-600 focus:ring-2 focus:outline-none ${
+          error
+            ? "border-red-500 hover:border-red-400 focus:border-red-400 focus:ring-red-400"
+            : "border-zinc-700 hover:border-zinc-600 focus:border-zinc-500 focus:ring-zinc-300"
+        }`}
       />
+      {error !== undefined && (
+        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-400">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
