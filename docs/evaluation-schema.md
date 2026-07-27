@@ -4,26 +4,28 @@ This is the JSON contract between AgentAudit and its evaluator. It is transport-
 
 ## 1. Evaluation request
 
-A single JSON object. All three fields are required, non-empty strings.
+A single JSON object. All three fields are required. String values are trimmed before their length is checked, so empty and whitespace-only values are rejected.
 
-| Field | Type | Description |
-|---|---|---|
-| `category` | string enum | One of: `customer_support`, `sales`, `appointment_booking`, `technical_support`, `recruiting`. Selects the rubric emphasis defined in [product-scope.md](product-scope.md). |
-| `agentGoal` | string | One or two sentences stating what the agent was supposed to accomplish, including any hard constraints (e.g. refund limits, escalation rules). `goalCompletion` is judged against this, not against generic expectations. |
-| `transcript` | string | The full conversation as plain text, one turn per line. Each line begins with a speaker label ending in a colon — `Agent:` marks the AI agent; the other party's label may vary by category (`Customer:`, `Candidate:`, …). |
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| `category` | string enum | One of: `customer_support`, `sales`, `appointment_booking`, `technical_support`, `recruiting` | Selects the rubric defined in [product-scope.md](product-scope.md). |
+| `agentGoal` | string | 5–500 characters | One or two sentences stating what the agent was supposed to accomplish, including any hard constraints (e.g. refund limits, escalation rules). `goalCompletion` is judged against this, not against generic expectations. |
+| `transcript` | string | 20–50,000 characters | The full conversation as plain text, one turn per line. Each line begins with a speaker label ending in a colon — `Agent:` marks the AI agent; the other party's label may vary by category (`Customer:`, `Candidate:`, …). |
+
+The transport also caps the whole request body at 256 KiB of UTF-8 bytes; see [system-architecture.md](system-architecture.md).
 
 ## 2. Evaluation result
 
-A single JSON object with exactly the fields below — no additions.
+A single JSON object with exactly the fields below. Unknown fields are rejected at every object level — the result object, the `scores` object, and each `issues` entry. String values are trimmed before their length is checked.
 
-| Field | Type | Description |
-|---|---|---|
-| `overallScore` | integer 0–100 | Holistic quality judgment of the agent's performance. Not required to be the arithmetic mean of the four sub-scores. |
-| `verdict` | string enum | `pass` \| `needs_improvement` \| `fail`. Derived from `overallScore` per the thresholds in section 3 — never chosen independently. |
-| `summary` | string | Two to four sentences of plain-language assessment a reviewer can read without the transcript. |
-| `scores` | object | Four required keys, each an integer 0–100 (see below). |
-| `issues` | array | Zero or more findings (see below), ordered highest to lowest severity. |
-| `betterResponse` | string | A rewritten, ideal agent reply for the most important failed moment in the conversation. |
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| `overallScore` | integer | 0–100 | Holistic quality judgment of the agent's performance. Not required to be the arithmetic mean of the four sub-scores. |
+| `verdict` | string enum | `pass` \| `needs_improvement` \| `fail` | Derived from `overallScore` per the thresholds in section 3 — never chosen independently. |
+| `summary` | string | 10–1,000 characters | Two to four sentences of plain-language assessment a reviewer can read without the transcript. |
+| `scores` | object | Four required keys, each an integer 0–100 | See below. |
+| `issues` | array | Zero or more entries | Findings (see below), ordered highest to lowest severity. |
+| `betterResponse` | string | 5–5,000 characters | A rewritten, ideal agent reply for the most important failed moment in the conversation. |
 
 ### `scores` sub-fields
 
@@ -36,12 +38,12 @@ A single JSON object with exactly the fields below — no additions.
 
 ### `issues[]` entries
 
-| Field | Type | Description |
-|---|---|---|
-| `severity` | string enum | `low` \| `medium` \| `high` \| `critical` (definitions below) |
-| `quote` | string | Verbatim excerpt from the submitted transcript showing the problem |
-| `explanation` | string | Why this moment is a problem |
-| `recommendation` | string | What the agent should have done instead |
+| Field | Type | Constraints | Description |
+|---|---|---|---|
+| `severity` | string enum | `low` \| `medium` \| `high` \| `critical` | Definitions below |
+| `quote` | string | 1–2,000 characters | Verbatim excerpt from the submitted transcript showing the problem |
+| `explanation` | string | 5–2,000 characters | Why this moment is a problem |
+| `recommendation` | string | 5–2,000 characters | What the agent should have done instead |
 
 | Severity | Meaning |
 |---|---|
@@ -63,11 +65,13 @@ The verdict is a pure function of `overallScore`. A result whose verdict does no
 ## 4. Validation decisions
 
 1. **Every score is an integer from 0 to 100** — `overallScore` and all four `scores` values. No floats, no nulls, no omissions.
-2. **Issue quotes must come directly from the transcript** — each `issues[].quote` is an exact, verbatim substring of the submitted `transcript`.
-3. **The evaluator must never invent transcript evidence** — a finding that cannot be supported by a verbatim quote is invalid and must be dropped, not paraphrased into existence.
-4. **Issues are ordered from highest to lowest severity** — `critical` first, then `high`, `medium`, `low`.
-5. **An empty `issues` array is allowed** — strong conversations produce `[]`, and that is a valid result, not an error.
-6. **`betterResponse` addresses the most important failed moment** — the moment behind the highest-severity issue. When `issues` is empty, it instead offers a strengthened version of the conversation's weakest adequate moment.
+2. **The verdict must match the score** — a result whose `verdict` disagrees with the section 3 thresholds is invalid, and the error is reported against the `verdict` field.
+3. **Issue quotes must come directly from the transcript** — each `issues[].quote` is an exact, case-sensitive substring of the submitted `transcript`.
+4. **Issues are ordered from highest to lowest severity** — `critical`, then `high`, `medium`, `low`. Equal adjacent severities are valid; a later issue that is more severe than an earlier one is not.
+5. **The evaluator must never invent transcript evidence** — it is instructed to drop any finding it cannot support with a verbatim quote rather than paraphrase one into existence.
+6. **Unverifiable evidence rejects the whole evaluation.** Rules 3 and 4 are also enforced after the model replies. If any quote is not an exact substring, or the ordering is wrong, the entire result is rejected — nothing is trimmed, reordered, repaired, or silently removed. Removing a single unsupported finding would leave the scores and summary that were reasoned from it standing without evidence, so the evaluation fails as a whole and the user can retry.
+7. **An empty `issues` array is allowed** — strong conversations produce `[]`, and that is a valid result, not an error.
+8. **`betterResponse` addresses the most important failed moment** — the moment behind the highest-severity issue. When `issues` is empty, it instead offers a strengthened version of the conversation's weakest adequate moment.
 
 ## 5. Example request
 

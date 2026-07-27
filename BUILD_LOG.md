@@ -63,3 +63,15 @@ AgentAudit will eventually need to sit close to real conversations, but the MVP 
 **Stateless scope means no boundary worth drawing.** With no database, auth, sessions, or webhooks (explicit scope non-goals), there is no component with independent scaling or lifecycle needs. Service boundaries earn their cost when parts must evolve or scale separately; nothing here does yet.
 
 **One deployable is the fastest thing to iterate.** A single build that deploys and rolls back atomically, with no cross-service version matrix, keeps the loop short during the phase where the product changes fastest. When live audio or integrations arrive (post-MVP), they can justify their own services on their own merits.
+
+## 2026-07-26 — Decisions made while implementing
+
+The application is built: one page, one API route, and the shared schema module the contract described. Four decisions changed or sharpened the earlier plans.
+
+**Failed evidence rejects the evaluation instead of dropping the finding.** The contract originally said an unverifiable finding should be dropped. The implementation rejects the whole result, because removing one finding leaves the scores and summary that were reasoned from it in place but unsupported — a quietly wrong report is worse than a failed one the user can retry. The documentation was corrected to match.
+
+**Prompt safety is separation, not delimiters.** An early version wrapped the agent goal and transcript in XML-style tags inside a single prompt string. A transcript can contain the closing tag, so that boundary is not real. The evaluator now returns trusted instructions and untrusted input as two values: the instructions contain no user text at all, and the goal and transcript travel as JSON, where quotes, newlines, and tags stay inert data.
+
+**Retention claims were narrowed to what the flag actually does.** The evaluation request sets `store: false`, which disables Responses API application-state storage for that request, and AgentAudit itself neither logs nor persists transcripts, prompts, or responses. That is not the same as zero data retention — separate OpenAI platform abuse-monitoring and organizational retention policies may still apply — so no document claims it is.
+
+**Configuration is read lazily so builds need no secrets.** The OpenAI client and model identifier are resolved on first use inside a `server-only` module rather than at import time, which keeps `npm run build` working without credentials and turns a missing key into a distinct, safe runtime error rather than a build failure.

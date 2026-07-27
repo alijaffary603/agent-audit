@@ -18,12 +18,13 @@ AgentAudit closes that gap: paste one conversation transcript, get a consistent,
 ## The exact MVP user flow
 
 1. Open AgentAudit — a single page. No sign-in, no onboarding.
-2. Paste one conversation transcript into the input area as plain text with speaker-labeled turns (e.g. `Agent:` / `Customer:`).
-3. Select exactly one of the five supported conversation categories.
-4. Click **Run Audit**.
-5. Read the report, rendered on the same page: an overall verdict and score, findings anchored to specific transcript turns, and category-specific observations. (The precise report structure is defined in [evaluation-schema.md](evaluation-schema.md).)
-6. Optionally edit the transcript or switch category and re-run.
-7. Leave. Nothing is stored — refreshing the page clears everything.
+2. Paste one conversation transcript as plain text with speaker-labeled turns (e.g. `Agent:` / `Customer:`), or load one of the built-in sample conversations.
+3. State the agent goal: what the agent was supposed to accomplish, including any hard constraints such as refund limits or escalation rules.
+4. Select exactly one of the five supported conversation categories.
+5. Select **Run audit**.
+6. Read the report, rendered on the same page: an overall score and verdict, four dimension scores, findings quoted from the transcript, and a stronger suggested response. (The precise report structure is defined in [evaluation-schema.md](evaluation-schema.md).) Optionally copy the audit as plain text, or just the stronger response.
+7. Optionally edit any input, clear the conversation, or switch category and re-run.
+8. Leave. Nothing is stored — refreshing the page clears everything.
 
 ## Supported conversation categories
 
@@ -54,6 +55,7 @@ These are sequencing decisions, not permanent exclusions:
 
 - **Authentication** — nothing is stored per user, so login is pure friction with no MVP payoff.
 - **Database** — reports are ephemeral by design; persistence raises privacy stakes before the product has earned trust.
+- **Stored audit history** — results live in page state only. Refreshing or leaving discards them, and there is nothing to revisit later.
 - **Live calls** — real-time analysis is a different product surface; the audit must prove itself on static text first.
 - **Audio uploads** — transcription errors would confound evaluation of audit quality (see BUILD_LOG.md).
 - **Telephony** — vendor integration, per-minute cost, and consent compliance, with zero effect on report quality.
