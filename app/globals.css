@@ -2,7 +2,8 @@
 
 :root {
   color-scheme: dark;
-  --background: #09090b;
+  /* Softer charcoal than pure black, so panels can sit above the page. */
+  --background: #111114;
   --foreground: #fafafa;
 }
 

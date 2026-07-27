@@ -39,11 +39,11 @@ export function CategorySelector({
     <div>
       <label
         htmlFor={selectId}
-        className="block text-sm font-medium text-zinc-200"
+        className="block text-sm font-medium text-zinc-100"
       >
         Conversation category
       </label>
-      <p id={helperId} className="mt-1 text-xs leading-5 text-zinc-500">
+      <p id={helperId} className="mt-1 text-xs leading-5 text-zinc-400">
         Sets what the evaluation emphasizes for this conversation.
       </p>
       <select
@@ -55,10 +55,10 @@ export function CategorySelector({
         onChange={(event) => onChange(event.target.value as CategoryId)}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
-        className={`mt-2 block w-full rounded-lg border bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:ring-2 focus:outline-none ${
+        className={`mt-2 block w-full rounded-lg border bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:ring-2 focus:outline-none ${
           error
-            ? "border-red-500 hover:border-red-400 focus:border-red-400 focus:ring-red-400"
-            : "border-zinc-700 hover:border-zinc-600 focus:border-zinc-500 focus:ring-zinc-300"
+            ? "border-red-500 hover:border-red-400 focus:border-red-400 focus:ring-red-400/70"
+            : "border-zinc-600/80 hover:border-zinc-500 focus:border-indigo-400 focus:ring-indigo-400/60"
         }`}
       >
         {CATEGORIES.map((category) => (
@@ -68,16 +68,16 @@ export function CategorySelector({
         ))}
       </select>
       {error !== undefined && (
-        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-400">
+        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-300">
           {error}
         </p>
       )}
       <p
         id={descriptionId}
         aria-live="polite"
-        className="mt-2 text-xs leading-5 text-zinc-400"
+        className="mt-2 text-xs leading-5 text-zinc-300"
       >
-        <span className="font-medium text-zinc-300">Evaluates:</span>{" "}
+        <span className="font-medium text-zinc-200">Evaluates:</span>{" "}
         {selected?.description}
       </p>
     </div>

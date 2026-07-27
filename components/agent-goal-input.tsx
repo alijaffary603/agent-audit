@@ -37,12 +37,12 @@ export function AgentGoalInput({
     <div>
       <label
         htmlFor={textareaId}
-        className="block text-sm font-medium text-zinc-200"
+        className="block text-sm font-medium text-zinc-100"
       >
         Agent goal
       </label>
       <div className="mt-1 flex items-baseline justify-between gap-4">
-        <p id={helperId} className="text-xs leading-5 text-zinc-500">
+        <p id={helperId} className="text-xs leading-5 text-zinc-400">
           Include the goal and any hard constraints, such as refund limits or
           escalation rules.
         </p>
@@ -51,7 +51,7 @@ export function AgentGoalInput({
           className={`shrink-0 text-xs leading-5 tabular-nums ${
             value.length >= WARN_AT
               ? "font-medium text-amber-400"
-              : "text-zinc-600"
+              : "text-zinc-400"
           }`}
         >
           {value.length}/{MAX_LENGTH}
@@ -67,14 +67,14 @@ export function AgentGoalInput({
         placeholder="Resolve the customer’s billing issue. Refunds over $50 must be escalated to a human specialist."
         maxLength={MAX_LENGTH}
         rows={3}
-        className={`mt-2 block w-full resize-y rounded-lg border bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:ring-2 focus:outline-none ${
+        className={`mt-2 block w-full resize-y rounded-lg border bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:ring-2 focus:outline-none ${
           error
-            ? "border-red-500 hover:border-red-400 focus:border-red-400 focus:ring-red-400"
-            : "border-zinc-700 hover:border-zinc-600 focus:border-zinc-500 focus:ring-zinc-300"
+            ? "border-red-500 hover:border-red-400 focus:border-red-400 focus:ring-red-400/70"
+            : "border-zinc-600/80 hover:border-zinc-500 focus:border-indigo-400 focus:ring-indigo-400/60"
         }`}
       />
       {error !== undefined && (
-        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-400">
+        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-300">
           {error}
         </p>
       )}
