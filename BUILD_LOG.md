@@ -1,6 +1,6 @@
 # Build Log
 
-## 2026-07-26 — Milestone 1: Repository setup
+## 2026-07-26 — Start with pasted transcripts
 
 ### Decision: the MVP audits pasted transcripts, not live audio or telephony
 
@@ -16,7 +16,7 @@ AgentAudit will eventually need to sit close to real conversations, but the MVP 
 
 **Nothing is thrown away later.** Transcripts are the stable interface: when live audio or telephony is added, speech-to-text output will feed the same audit pipeline the MVP builds.
 
-## 2026-07-26 — Milestone 2: Product scope
+## 2026-07-26 — Define product scope before implementation
 
 ### Decision: prove the audit on existing transcripts before building any integration
 
@@ -32,9 +32,9 @@ AgentAudit will eventually need to sit close to real conversations, but the MVP 
 
 **Success criteria are written before the code.** The scope doc commits to what "works" means — evidence-anchored findings, planted-failure detection, re-run consistency — so the MVP gets judged against pre-committed goals rather than post-hoc rationalization.
 
-**Schema and architecture are deliberately deferred.** Locking a response schema before seeing real reports would freeze today's guesses; both land in later milestones once the product shape is validated.
+**Schema and architecture are deliberately deferred.** Locking a response schema before seeing real reports would freeze today's guesses; both are defined later, once the product shape is validated.
 
-## 2026-07-26 — Milestone 3: Evaluation contract
+## 2026-07-26 — Define the evaluation contract first
 
 ### Decision: fix the evaluation contract before the UI or model integration exists
 
@@ -46,6 +46,20 @@ AgentAudit will eventually need to sit close to real conversations, but the MVP 
 
 **Grades cannot be curved later.** Verdict thresholds (80/50) and integer scoring are committed before any real model output exists, so the bar is set in advance rather than adjusted to flatter early results.
 
-**The contract operationalizes Milestone 2's success criteria.** Evidence-anchored findings map to the quote rule; re-run consistency is measurable because scores are integers on fixed scales; strong conversations are handled explicitly (an empty issues array is valid, not an error).
+**The contract operationalizes the scope's success criteria.** Evidence-anchored findings map to the quote rule; re-run consistency is measurable because scores are integers on fixed scales; strong conversations are handled explicitly (an empty issues array is valid, not an error).
 
-**It is still not architecture.** The contract is transport- and model-agnostic — nothing here chooses endpoints, frameworks, or providers, so those decisions remain open for the milestones that own them.
+**It is still not architecture.** The contract is transport- and model-agnostic — nothing here chooses endpoints, frameworks, or providers, so those decisions remain open for the work that owns them.
+
+## 2026-07-26 — Keep the MVP as one deployable application
+
+### Decision: one Next.js application, one deployable
+
+[docs/system-architecture.md](docs/system-architecture.md) commits AgentAudit to a single Next.js app serving both the page and one API route. Why a single deployable is right for this MVP:
+
+**The server exists for exactly one reason: the OpenAI key.** Everything else about the MVP could run in a browser. Key custody — plus server-side validation and evidence verification — justifies a thin server, but only one route's worth. A separate backend would mean a second deploy, a second config, and a network boundary in exchange for hosting a single endpoint.
+
+**Shared contract types are the payoff of staying in one codebase.** The evaluation contract becomes one schema module enforced at four points — client form, server request, the model's structured-output constraint, and server response. Split the app in two and that single source of truth becomes two copies that drift, which is the exact failure mode the contract was written to eliminate.
+
+**Stateless scope means no boundary worth drawing.** With no database, auth, sessions, or webhooks (explicit scope non-goals), there is no component with independent scaling or lifecycle needs. Service boundaries earn their cost when parts must evolve or scale separately; nothing here does yet.
+
+**One deployable is the fastest thing to iterate.** A single build that deploys and rolls back atomically, with no cross-service version matrix, keeps the loop short during the phase where the product changes fastest. When live audio or integrations arrive (post-MVP), they can justify their own services on their own merits.
