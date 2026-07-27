@@ -43,7 +43,15 @@ export default function Home() {
   const [evaluationResult, setEvaluationResult] =
     useState<EvaluationResult | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  /**
+   * UI only: whether the workspace has opened into its two-column form. Set
+   * when a client-valid submission begins and cleared only by Clear
+   * conversation, so loading, errors, and cleared results all keep the
+   * workspace open. Never sent to the API and never persisted.
+   */
+  const [hasStartedAudit, setHasStartedAudit] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const resultsRef = useRef<HTMLElement>(null);
   const categoryRef = useRef<HTMLSelectElement>(null);
   const agentGoalRef = useRef<HTMLTextAreaElement>(null);
   const transcriptRef = useRef<HTMLTextAreaElement>(null);
@@ -76,6 +84,26 @@ export default function Home() {
       abortControllerRef.current?.abort();
     };
   }, []);
+
+  /**
+   * On stacked layouts the results panel opens below the form, so bring it
+   * into view when it would otherwise sit off-screen. Wide layouts place it
+   * beside the form and are left alone.
+   */
+  useEffect(() => {
+    if (!hasStartedAudit) return;
+    const region = resultsRef.current;
+    if (region === null) return;
+    if (window.matchMedia("(min-width: 64rem)").matches) return;
+    if (region.getBoundingClientRect().top <= window.innerHeight) return;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    region.scrollIntoView({
+      block: "nearest",
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }, [hasStartedAudit]);
 
   function cancelActiveRequest() {
     abortControllerRef.current?.abort();
@@ -132,6 +160,8 @@ export default function Home() {
     setFieldErrors({});
     setSubmissionError(null);
     setEvaluationResult(null);
+    // Only a client-valid submission opens the workspace.
+    setHasStartedAudit(true);
 
     // A newer submission owns the state from here on; any previous request
     // is aborted and its handlers become no-ops via the controller check.
@@ -179,13 +209,19 @@ export default function Home() {
     setFieldErrors({});
     setSubmissionError(null);
     setEvaluationResult(null);
+    // Clearing is the only path back to the centered starting layout.
+    setHasStartedAudit(false);
   }
 
   const isPristine =
     category === "customer_support" && agentGoal === "" && transcript === "";
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+    <div
+      className={`mx-auto flex w-full flex-1 flex-col px-4 py-8 transition-[max-width] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:px-6 sm:py-10 lg:px-10 ${
+        hasStartedAudit ? "max-w-6xl" : "max-w-2xl"
+      }`}
+    >
       <header className="border-b border-zinc-300 pb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
           AgentAudit
@@ -196,7 +232,18 @@ export default function Home() {
         </p>
       </header>
 
-      <main className="mt-8 grid flex-1 gap-6 lg:grid-cols-2 lg:gap-8">
+      {/*
+        The second track animates open from zero width instead of the column
+        count flipping, so the form panel never snaps to half width before
+        settling.
+      */}
+      <main
+        className={`mt-8 grid flex-1 transition-[grid-template-columns,gap] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          hasStartedAudit
+            ? "gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8"
+            : "gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,0fr)]"
+        }`}
+      >
         <section
           aria-labelledby="conversation-input-heading"
           className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
@@ -256,38 +303,41 @@ export default function Home() {
           </form>
         </section>
 
-        <section
-          aria-labelledby="evaluation-results-heading"
-          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
-        >
-          <h2
-            id="evaluation-results-heading"
-            className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
+        {hasStartedAudit ? (
+          <section
+            ref={resultsRef}
+            aria-labelledby="evaluation-results-heading"
+            className="results-enter flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
           >
-            Evaluation Results
-          </h2>
-          {isSubmitting ? (
-            <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
-              <p role="status" className="text-sm text-zinc-800">
-                Evaluating the conversation…
-              </p>
-            </div>
-          ) : submissionError !== null ? (
-            <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3">
-              <p role="alert" className="text-sm break-words text-red-800">
-                {submissionError}
-              </p>
-            </div>
-          ) : evaluationResult !== null ? (
-            <EvaluationResults result={evaluationResult} />
-          ) : (
-            <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-300">
-              <p className="px-6 py-10 text-center text-sm text-zinc-600">
-                The audit report will render here.
-              </p>
-            </div>
-          )}
-        </section>
+            <h2
+              id="evaluation-results-heading"
+              className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
+            >
+              Evaluation Results
+            </h2>
+            {isSubmitting ? (
+              <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
+                <p role="status" className="text-sm text-zinc-800">
+                  Evaluating the conversation…
+                </p>
+              </div>
+            ) : submissionError !== null ? (
+              <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3">
+                <p role="alert" className="text-sm break-words text-red-800">
+                  {submissionError}
+                </p>
+              </div>
+            ) : evaluationResult !== null ? (
+              <EvaluationResults result={evaluationResult} />
+            ) : (
+              <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-300">
+                <p className="px-6 py-10 text-center text-sm text-zinc-600">
+                  The audit report will render here.
+                </p>
+              </div>
+            )}
+          </section>
+        ) : null}
       </main>
     </div>
   );
