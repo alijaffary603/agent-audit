@@ -4,6 +4,8 @@ AgentAudit turns a transcript of an AI-agent conversation into a structured, evi
 
 It is a single Next.js application: one page, one API route, no database, no accounts.
 
+![A completed audit: overall score and verdict, four dimension scores, and findings quoted from the transcript](docs/screenshot.png)
+
 ## Core features
 
 - **Structured evaluation** — every audit returns the same schema: overall score (0–100), verdict, summary, four dimension scores, findings, and a stronger response.
@@ -53,14 +55,30 @@ The app runs at http://localhost:3000.
 
 ## Environment variables
 
-Both are required and are read only on the server.
+All four are read only on the server and are never exposed to the browser.
 
-| Variable | Purpose |
-|---|---|
-| `OPENAI_API_KEY` | Your OpenAI API key. Used to call the Responses API; never sent to the browser. |
-| `OPENAI_MODEL` | The model identifier to evaluate with. No model is hardcoded in the application — choose an OpenAI model that supports the Responses API with structured outputs. |
+| Variable | Required | Purpose |
+|---|---|---|
+| `OPENAI_API_KEY` | always | Your OpenAI API key, used to call the Responses API. |
+| `OPENAI_MODEL` | always | The model to evaluate with. No model is hardcoded — choose one that supports the Responses API with structured outputs. |
+| `UPSTASH_REDIS_REST_URL` | deployed only | Upstash Redis REST endpoint, backing the rate limits. |
+| `UPSTASH_REDIS_REST_TOKEN` | deployed only | Upstash Redis REST token. |
 
-Both are read lazily, so `npm run build` succeeds without them; a request made while either is missing returns a configuration error instead of failing the build.
+Every value is read lazily, so `npm run build` succeeds without any of them.
+
+**Locally**, the two OpenAI variables are enough: with no Upstash credentials the rate limiter is bypassed so the project stays runnable. **On a deployed environment the Upstash variables are mandatory** — without them rate limiting cannot be enforced, so the endpoint fails closed and every audit returns a 503 rather than running unmetered.
+
+## Rate limits
+
+Evaluations are limited per caller and in aggregate. Only well-formed, schema-valid requests consume allowance; malformed JSON, oversized payloads, and invalid fields are rejected before the limiter is reached, and a request blocked by a per-IP limit does not spend the shared global budget.
+
+| Limit | Allowance | Window |
+|---|---|---|
+| Burst, per IP | 5 requests | 60 seconds, sliding |
+| Daily, per IP | 25 requests | 24 hours, fixed |
+| Daily, global | 250 requests | 24 hours, fixed |
+
+Exceeding any of them returns `429` with `Retry-After` and `X-RateLimit-*` headers. Callers are identified from platform forwarding headers only; arbitrary client-supplied identity headers are ignored. The limits live at the top of [lib/rate-limit.ts](lib/rate-limit.ts).
 
 ## Commands
 
@@ -69,6 +87,8 @@ Both are read lazily, so `npm run build` succeeds without them; a request made w
 | `npm run dev` | Start the development server on port 3000 |
 | `npm run build` | Production build |
 | `npm start` | Serve the production build (run `npm run build` first) |
+| `npm test` | Unit test suite (Vitest) |
+| `npm run benchmark` | Evaluator quality benchmark — **makes 45 live API calls** |
 | `npm run lint` | ESLint across the project |
 
 ## How an evaluation works
@@ -93,6 +113,28 @@ Both are read lazily, so `npm run build` succeeds without them; a request made w
 - Requests are capped at 256 KiB, checked both from `Content-Length` and from the actual UTF-8 byte length of the body.
 - There is no database, no account system, no analytics, and no telemetry. Page state lives in memory for the session only.
 
+## Evaluator quality
+
+The evaluator is measured against 15 labelled transcripts in [benchmark/dataset.ts](benchmark/dataset.ts) — ten with deliberately planted failures and five clean conversations — each run three times. Full numbers and per-case detail are in [benchmark/RESULTS.md](benchmark/RESULTS.md); reproduce with `npm run benchmark`.
+
+| Measure | Result |
+|---|---|
+| Planted-issue recall | 100% (32/32) |
+| Fabricated quotes | 0 of 132 quotes returned |
+| Verdict agreement | 75.6% (34/45 runs) |
+| Overall-score variance | mean sd 2.8 (worst 7.1) |
+
+The one weak number is worth stating plainly: **every disagreement was the evaluator being too harsh on a clean conversation.** It found every planted failure and invented no evidence, but scored four of the five good transcripts in the 60s–70s, landing them in `needs_improvement` instead of `pass`. Calibrating the pass band is the clearest next improvement.
+
+## Testing
+
+```bash
+npm test        # unit suite, no network, no credentials required
+npm run benchmark  # evaluator quality, makes 45 live API calls
+```
+
+The unit suite covers the request and result schemas, verdict thresholds, evidence and severity-order verification, per-field validation messages, prompt-injection separation, export formatting, rate-limit identifier handling and configuration policy, and the integrity of the benchmark dataset itself. Lint, unit tests, and the production build run on every push via [GitHub Actions](.github/workflows/ci.yml).
+
 ## Limitations
 
 - One conversation at a time. There is no audit history — refreshing the page clears the result.
@@ -102,7 +144,7 @@ Both are read lazily, so `npm run build` succeeds without them; a request made w
 - Input is plain text with speaker-labelled lines. There is no audio, telephony, or live-call support.
 - Transcripts are capped at 50,000 characters and agent goals at 500 characters.
 - Rubrics are written in English and have not been evaluated against other languages.
-- The repository has no automated test suite.
+- The benchmark is 15 transcripts on one model; it is a smoke test of evaluator quality, not a broad evaluation.
 
 ## Deployment
 
@@ -110,10 +152,11 @@ The application deploys to Vercel as a standard Next.js project.
 
 1. Push the repository to GitHub.
 2. Import it in Vercel — the Next.js framework preset is detected automatically; no build settings need to change.
-3. Add `OPENAI_API_KEY` and `OPENAI_MODEL` as environment variables for the environments you plan to use.
-4. Deploy.
+3. Create an Upstash Redis database and copy its REST URL and token.
+4. Add **all four** environment variables from the table above. The Upstash pair is not optional here: without it every audit returns a 503.
+5. Deploy.
 
-The evaluation route declares the Node.js runtime, so it runs as a Node serverless function rather than on the Edge runtime.
+The evaluation route declares the Node.js runtime, so it runs as a Node serverless function rather than on the Edge runtime, with a 30 second upstream timeout and a slightly higher function limit.
 
 ## Repository structure
 
