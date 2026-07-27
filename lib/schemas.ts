@@ -47,10 +47,21 @@ const ScoreSchema = z
   .max(100, "Scores cannot exceed 100.");
 
 /**
+ * Verdict thresholds (docs/evaluation-schema.md, section 3): the verdict is
+ * a pure function of overallScore — pass 80–100, needs_improvement 50–79,
+ * fail 0–49.
+ */
+function verdictForScore(overallScore: number): Verdict {
+  if (overallScore >= 80) return "pass";
+  if (overallScore >= 50) return "needs_improvement";
+  return "fail";
+}
+
+/**
  * Evaluation result contract — the executable form of section 2 of
  * docs/evaluation-schema.md. Unknown fields are rejected at every object
- * level ("exactly the fields below — no additions"). Structural validation
- * only: verdict/score consistency, severity ordering, and verbatim-quote
+ * level ("exactly the fields below — no additions"), and the verdict must
+ * match the overallScore thresholds. Severity ordering and verbatim-quote
  * verification are enforced separately, not here.
  */
 export const EvaluationResultSchema = z.strictObject({
@@ -96,6 +107,16 @@ export const EvaluationResultSchema = z.strictObject({
     .trim()
     .min(5, "Better response must be at least 5 characters.")
     .max(5_000, "Better response must be 5,000 characters or fewer."),
+}).check((ctx) => {
+  const expected = verdictForScore(ctx.value.overallScore);
+  if (ctx.value.verdict !== expected) {
+    ctx.issues.push({
+      code: "custom",
+      path: ["verdict"],
+      input: ctx.value.verdict,
+      message: `Verdict must be "${expected}" for an overall score of ${ctx.value.overallScore}.`,
+    });
+  }
 });
 
 export type EvaluationResult = z.infer<typeof EvaluationResultSchema>;
