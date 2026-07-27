@@ -1,6 +1,6 @@
 # AgentAudit — MVP Product Scope
 
-Defined 2026-07-26 (Milestone 2). This document fixes what the MVP is and is not. The response schema and technical architecture are deliberately deferred to later milestones.
+This document fixes what the MVP is and is not. The response schema and technical architecture are defined separately in [evaluation-schema.md](evaluation-schema.md) and [system-architecture.md](system-architecture.md).
 
 ## The problem AgentAudit solves
 
@@ -21,7 +21,7 @@ AgentAudit closes that gap: paste one conversation transcript, get a consistent,
 2. Paste one conversation transcript into the input area as plain text with speaker-labeled turns (e.g. `Agent:` / `Customer:`).
 3. Select exactly one of the five supported conversation categories.
 4. Click **Run Audit**.
-5. Read the report, rendered on the same page: an overall verdict and score, findings anchored to specific transcript turns, and category-specific observations. (The precise report structure is defined in a later milestone.)
+5. Read the report, rendered on the same page: an overall verdict and score, findings anchored to specific transcript turns, and category-specific observations. (The precise report structure is defined in [evaluation-schema.md](evaluation-schema.md).)
 6. Optionally edit the transcript or switch category and re-run.
 7. Leave. Nothing is stored — refreshing the page clears everything.
 
@@ -55,7 +55,7 @@ These are sequencing decisions, not permanent exclusions:
 - **Authentication** — nothing is stored per user, so login is pure friction with no MVP payoff.
 - **Database** — reports are ephemeral by design; persistence raises privacy stakes before the product has earned trust.
 - **Live calls** — real-time analysis is a different product surface; the audit must prove itself on static text first.
-- **Audio uploads** — transcription errors would confound evaluation of audit quality (see BUILD_LOG.md, Milestone 1).
+- **Audio uploads** — transcription errors would confound evaluation of audit quality (see BUILD_LOG.md).
 - **Telephony** — vendor integration, per-minute cost, and consent compliance, with zero effect on report quality.
 - **Webhooks** — no automation surface until the manual flow demonstrates value.
 - **Multiple pages** — the entire MVP is one screen: paste → audit → read.

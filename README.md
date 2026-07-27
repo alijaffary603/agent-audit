@@ -21,4 +21,4 @@ cp .env.example .env
 
 ## Status
 
-Milestone 1 (repository setup) is complete. The Next.js application scaffold comes in the next milestone.
+The product scope, evaluation contract, and system architecture are defined in [docs/](docs/). The next step is scaffolding the Next.js application.

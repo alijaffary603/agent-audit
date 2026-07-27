@@ -1,6 +1,6 @@
 # AgentAudit — Structured Evaluation Contract
 
-Defined 2026-07-26 (Milestone 3). This is the JSON contract between AgentAudit and its evaluator. It is transport- and implementation-agnostic: how it is served and which model produces results are decided in later milestones.
+This is the JSON contract between AgentAudit and its evaluator. It is transport- and implementation-agnostic: how it is served and which model produces results belong to [system-architecture.md](system-architecture.md), not to this contract.
 
 ## 1. Evaluation request
 
