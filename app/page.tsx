@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 
+import { AgentGoalInput } from "@/components/agent-goal-input";
 import { CategorySelector } from "@/components/category-selector";
 import type { CategoryId } from "@/lib/categories";
 
 export default function Home() {
   const [category, setCategory] = useState<CategoryId>("customer_support");
+  const [agentGoal, setAgentGoal] = useState("");
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:px-10">
@@ -31,12 +33,13 @@ export default function Home() {
           >
             Conversation Input
           </h2>
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
             <CategorySelector value={category} onChange={setCategory} />
+            <AgentGoalInput value={agentGoal} onChange={setAgentGoal} />
           </div>
           <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-800">
             <p className="px-6 py-10 text-center text-sm text-zinc-500">
-              The agent goal and transcript inputs will live here.
+              The transcript editor will live here.
             </p>
           </div>
         </section>
