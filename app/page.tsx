@@ -1,4 +1,13 @@
+"use client";
+
+import { useState } from "react";
+
+import { CategorySelector } from "@/components/category-selector";
+import type { CategoryId } from "@/lib/categories";
+
 export default function Home() {
+  const [category, setCategory] = useState<CategoryId>("customer_support");
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:px-10">
       <header className="border-b border-zinc-800 pb-6">
@@ -22,9 +31,12 @@ export default function Home() {
           >
             Conversation Input
           </h2>
+          <div className="mt-4">
+            <CategorySelector value={category} onChange={setCategory} />
+          </div>
           <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-800">
             <p className="px-6 py-10 text-center text-sm text-zinc-500">
-              The transcript form will live here.
+              The agent goal and transcript inputs will live here.
             </p>
           </div>
         </section>
