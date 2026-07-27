@@ -4,13 +4,21 @@ import { useState } from "react";
 
 import { AgentGoalInput } from "@/components/agent-goal-input";
 import { CategorySelector } from "@/components/category-selector";
+import { SampleSelector } from "@/components/sample-selector";
 import { TranscriptEditor } from "@/components/transcript-editor";
+import type { SampleConversation } from "@/data/samples";
 import type { CategoryId } from "@/lib/categories";
 
 export default function Home() {
   const [category, setCategory] = useState<CategoryId>("customer_support");
   const [agentGoal, setAgentGoal] = useState("");
   const [transcript, setTranscript] = useState("");
+
+  function applySample(sample: SampleConversation) {
+    setCategory(sample.category);
+    setAgentGoal(sample.agentGoal);
+    setTranscript(sample.transcript);
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:px-10">
@@ -36,6 +44,7 @@ export default function Home() {
             Conversation Input
           </h2>
           <div className="mt-4 space-y-4">
+            <SampleSelector onSelect={applySample} />
             <CategorySelector value={category} onChange={setCategory} />
             <AgentGoalInput value={agentGoal} onChange={setAgentGoal} />
             <TranscriptEditor value={transcript} onChange={setTranscript} />
