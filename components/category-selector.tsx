@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type Ref } from "react";
 
 import { CATEGORIES, type CategoryId } from "@/lib/categories";
 
@@ -8,6 +8,8 @@ type CategorySelectorProps = {
   value: CategoryId;
   onChange: (value: CategoryId) => void;
   error?: string;
+  /** Lets the page focus this control when submission finds it invalid. */
+  ref?: Ref<HTMLSelectElement>;
 };
 
 /**
@@ -19,6 +21,7 @@ export function CategorySelector({
   value,
   onChange,
   error,
+  ref,
 }: CategorySelectorProps) {
   const id = useId();
   const selectId = `${id}-category`;
@@ -45,6 +48,7 @@ export function CategorySelector({
       </p>
       <select
         id={selectId}
+        ref={ref}
         value={value}
         // Options are rendered exclusively from CATEGORIES, so the DOM value
         // is always a valid CategoryId.

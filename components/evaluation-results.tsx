@@ -140,13 +140,16 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
               : ""}
         </p>
         {copyFailed ? (
-          <p role="alert" className="mt-2 text-xs leading-5 text-red-300">
+          <p
+            role="alert"
+            className="mt-2 text-xs leading-5 break-words text-red-300"
+          >
             {COPY_FAILURE_MESSAGE}
           </p>
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-4xl font-semibold tracking-tight text-zinc-50 tabular-nums">
             {result.overallScore}
@@ -158,7 +161,9 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
             {VERDICT_LABELS[result.verdict]}
           </p>
         </div>
-        <p className="mt-3 text-sm leading-6 text-zinc-300">{result.summary}</p>
+        <p className="mt-3 text-sm leading-6 break-words text-zinc-300">
+          {result.summary}
+        </p>
       </div>
 
       <div>
@@ -190,13 +195,13 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
                 >
                   {SEVERITY_LABELS[issue.severity]}
                 </p>
-                <blockquote className="mt-3 border-l-2 border-zinc-600 pl-3 font-mono text-sm leading-6 whitespace-pre-wrap text-zinc-200">
+                <blockquote className="mt-3 border-l-2 border-zinc-600 pl-3 font-mono text-sm leading-6 break-words whitespace-pre-wrap text-zinc-200">
                   {issue.quote}
                 </blockquote>
-                <p className="mt-3 text-sm leading-6 text-zinc-300">
+                <p className="mt-3 text-sm leading-6 break-words text-zinc-300">
                   {issue.explanation}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                <p className="mt-2 text-sm leading-6 break-words text-zinc-400">
                   <span className="font-medium text-zinc-300">
                     Recommendation:
                   </span>{" "}
@@ -214,7 +219,7 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
           A suggested response addressing the most important opportunity
           identified in the audit.
         </p>
-        <p className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 text-sm leading-6 whitespace-pre-wrap text-zinc-200">
+        <p className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 text-sm leading-6 break-words whitespace-pre-wrap text-zinc-200">
           {result.betterResponse}
         </p>
       </div>

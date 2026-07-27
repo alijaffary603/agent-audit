@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentAudit",
+  title: "AgentAudit — AI Conversation Evaluator",
   description:
-    "Paste an AI agent conversation transcript and get a structured, evidence-backed audit of how the agent performed.",
+    "Evaluate AI-agent conversations for goal completion, communication, accuracy, professionalism, and evidence-backed issues.",
 };
 
 export default function RootLayout({

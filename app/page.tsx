@@ -27,6 +27,13 @@ function isAbortError(error: unknown): boolean {
   );
 }
 
+/** Request fields in the order they appear in the form. */
+const FIELD_ORDER = [
+  "category",
+  "agentGoal",
+  "transcript",
+] as const satisfies readonly (keyof EvaluationFieldErrors)[];
+
 export default function Home() {
   const [category, setCategory] = useState<CategoryId>("customer_support");
   const [agentGoal, setAgentGoal] = useState("");
@@ -37,6 +44,31 @@ export default function Home() {
     useState<EvaluationResult | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+  const agentGoalRef = useRef<HTMLTextAreaElement>(null);
+  const transcriptRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * Moves focus to the first field the validator rejected, in form order.
+   * The lookup is keyed by the error map's own field names, so a new request
+   * field cannot be added without giving it a focus target.
+   */
+  function focusFirstInvalidField(errors: EvaluationFieldErrors) {
+    const focusTargets: Record<
+      keyof EvaluationFieldErrors,
+      () => HTMLElement | null
+    > = {
+      category: () => categoryRef.current,
+      agentGoal: () => agentGoalRef.current,
+      transcript: () => transcriptRef.current,
+    };
+    for (const field of FIELD_ORDER) {
+      if (errors[field] !== undefined) {
+        focusTargets[field]()?.focus();
+        return;
+      }
+    }
+  }
 
   // Abort any in-flight evaluation when the page unmounts.
   useEffect(() => {
@@ -93,6 +125,7 @@ export default function Home() {
       setFieldErrors(validation.errors);
       setSubmissionError(null);
       setEvaluationResult(null);
+      focusFirstInvalidField(validation.errors);
       return;
     }
 
@@ -152,7 +185,7 @@ export default function Home() {
     category === "customer_support" && agentGoal === "" && transcript === "";
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:px-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
       <header className="border-b border-zinc-800 pb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
           AgentAudit
@@ -166,9 +199,9 @@ export default function Home() {
       <main className="mt-8 grid flex-1 gap-6 lg:grid-cols-2">
         <section
           aria-labelledby="conversation-input-heading"
-          className="flex min-h-64 flex-col rounded-xl border border-zinc-800 bg-zinc-900/40 p-6"
+          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6"
         >
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <h2
               id="conversation-input-heading"
               className="text-sm font-medium tracking-wide text-zinc-200 uppercase"
@@ -192,20 +225,23 @@ export default function Home() {
           >
             <fieldset
               disabled={isSubmitting}
-              className="space-y-4 disabled:opacity-70"
+              className="space-y-4 disabled:opacity-80"
             >
               <SampleSelector onSelect={applySample} />
               <CategorySelector
+                ref={categoryRef}
                 value={category}
                 onChange={handleCategoryChange}
                 error={fieldErrors.category}
               />
               <AgentGoalInput
+                ref={agentGoalRef}
                 value={agentGoal}
                 onChange={handleAgentGoalChange}
                 error={fieldErrors.agentGoal}
               />
               <TranscriptEditor
+                ref={transcriptRef}
                 value={transcript}
                 onChange={handleTranscriptChange}
                 error={fieldErrors.transcript}
@@ -222,7 +258,7 @@ export default function Home() {
 
         <section
           aria-labelledby="evaluation-results-heading"
-          className="flex min-h-64 flex-col rounded-xl border border-zinc-800 bg-zinc-900/40 p-6"
+          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6"
         >
           <h2
             id="evaluation-results-heading"
@@ -238,7 +274,7 @@ export default function Home() {
             </div>
           ) : submissionError !== null ? (
             <div className="mt-4 rounded-lg border border-red-900/60 bg-red-950/30 px-4 py-3">
-              <p role="alert" className="text-sm text-red-300">
+              <p role="alert" className="text-sm break-words text-red-300">
                 {submissionError}
               </p>
             </div>

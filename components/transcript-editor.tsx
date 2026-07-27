@@ -1,11 +1,13 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type Ref } from "react";
 
 type TranscriptEditorProps = {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Lets the page focus this control when submission finds it invalid. */
+  ref?: Ref<HTMLTextAreaElement>;
 };
 
 const PLACEHOLDER = [
@@ -27,6 +29,7 @@ export function TranscriptEditor({
   value,
   onChange,
   error,
+  ref,
 }: TranscriptEditorProps) {
   const id = useId();
   const textareaId = `${id}-transcript`;
@@ -60,6 +63,7 @@ export function TranscriptEditor({
       </div>
       <textarea
         id={textareaId}
+        ref={ref}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-describedby={describedBy}

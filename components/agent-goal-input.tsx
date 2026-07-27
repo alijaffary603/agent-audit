@@ -1,11 +1,13 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type Ref } from "react";
 
 type AgentGoalInputProps = {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Lets the page focus this control when submission finds it invalid. */
+  ref?: Ref<HTMLTextAreaElement>;
 };
 
 /** Matches EvaluationRequestSchema's agentGoal maximum. */
@@ -18,7 +20,12 @@ const WARN_AT = 450;
  * Controlled textarea describing what the AI agent was expected to
  * accomplish in the conversation being audited.
  */
-export function AgentGoalInput({ value, onChange, error }: AgentGoalInputProps) {
+export function AgentGoalInput({
+  value,
+  onChange,
+  error,
+  ref,
+}: AgentGoalInputProps) {
   const id = useId();
   const textareaId = `${id}-agent-goal`;
   const helperId = `${id}-helper`;
@@ -52,6 +59,7 @@ export function AgentGoalInput({ value, onChange, error }: AgentGoalInputProps) 
       </div>
       <textarea
         id={textareaId}
+        ref={ref}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-describedby={describedBy}
