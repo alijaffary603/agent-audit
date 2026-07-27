@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
 import { AgentGoalInput } from "@/components/agent-goal-input";
 import { CategorySelector } from "@/components/category-selector";
+import { EvaluationResults } from "@/components/evaluation-results";
 import { SampleSelector } from "@/components/sample-selector";
 import { TranscriptEditor } from "@/components/transcript-editor";
 import type { SampleConversation } from "@/data/samples";
@@ -242,11 +243,7 @@ export default function Home() {
               </p>
             </div>
           ) : evaluationResult !== null ? (
-            <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-3">
-              <p role="status" className="text-sm text-zinc-300">
-                Audit complete. Detailed results are ready.
-              </p>
-            </div>
+            <EvaluationResults result={evaluationResult} />
           ) : (
             <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-800">
               <p className="px-6 py-10 text-center text-sm text-zinc-500">
