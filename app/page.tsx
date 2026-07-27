@@ -186,11 +186,11 @@ export default function Home() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
-      <header className="border-b border-zinc-800 pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl">
+      <header className="border-b border-zinc-300 pb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
           AgentAudit
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
           Paste an AI agent conversation transcript and get a structured,
           evidence-backed audit of how the agent performed.
         </p>
@@ -199,12 +199,12 @@ export default function Home() {
       <main className="mt-8 grid flex-1 gap-6 lg:grid-cols-2 lg:gap-8">
         <section
           aria-labelledby="conversation-input-heading"
-          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-700/70 bg-zinc-900 p-5 sm:p-6"
+          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
         >
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <h2
               id="conversation-input-heading"
-              className="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+              className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
             >
               Conversation Input
             </h2>
@@ -212,7 +212,7 @@ export default function Home() {
               type="button"
               onClick={clearConversation}
               disabled={isPristine || isSubmitting}
-              className="rounded-md border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 enabled:hover:border-zinc-500 enabled:hover:bg-zinc-800/60 enabled:hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 enabled:hover:border-zinc-400 enabled:hover:bg-zinc-100 enabled:hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Clear conversation
             </button>
@@ -248,7 +248,7 @@ export default function Home() {
               />
               <button
                 type="submit"
-                className="block w-full rounded-lg bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="block w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? "Running audit…" : "Run audit"}
               </button>
@@ -258,31 +258,31 @@ export default function Home() {
 
         <section
           aria-labelledby="evaluation-results-heading"
-          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-700/70 bg-zinc-900 p-5 sm:p-6"
+          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
         >
           <h2
             id="evaluation-results-heading"
-            className="text-sm font-semibold tracking-wide text-zinc-100 uppercase"
+            className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
           >
             Evaluation Results
           </h2>
           {isSubmitting ? (
-            <div className="mt-4 rounded-lg border border-zinc-700/70 bg-zinc-800/50 px-4 py-3">
-              <p role="status" className="text-sm text-zinc-200">
+            <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
+              <p role="status" className="text-sm text-zinc-800">
                 Evaluating the conversation…
               </p>
             </div>
           ) : submissionError !== null ? (
-            <div className="mt-4 rounded-lg border border-red-800/70 bg-red-950/40 px-4 py-3">
-              <p role="alert" className="text-sm break-words text-red-300">
+            <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3">
+              <p role="alert" className="text-sm break-words text-red-800">
                 {submissionError}
               </p>
             </div>
           ) : evaluationResult !== null ? (
             <EvaluationResults result={evaluationResult} />
           ) : (
-            <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-700">
-              <p className="px-6 py-10 text-center text-sm text-zinc-400">
+            <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-300">
+              <p className="px-6 py-10 text-center text-sm text-zinc-600">
                 The audit report will render here.
               </p>
             </div>

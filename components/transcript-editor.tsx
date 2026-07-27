@@ -42,20 +42,20 @@ export function TranscriptEditor({
     <div>
       <label
         htmlFor={textareaId}
-        className="block text-sm font-medium text-zinc-100"
+        className="block text-sm font-medium text-zinc-900"
       >
         Conversation transcript
       </label>
       <div className="mt-1 flex items-baseline justify-between gap-4">
-        <p id={helperId} className="text-xs leading-5 text-zinc-400">
+        <p id={helperId} className="text-xs leading-5 text-zinc-600">
           {'One conversation turn per line, each prefixed with a speaker label such as "Customer:" or "Agent:".'}
         </p>
         <p
           aria-live="polite"
           className={`shrink-0 text-xs leading-5 tabular-nums ${
             value.length >= WARN_AT
-              ? "font-medium text-amber-400"
-              : "text-zinc-400"
+              ? "font-medium text-amber-700"
+              : "text-zinc-600"
           }`}
         >
           {value.length}/{MAX_LENGTH}
@@ -71,14 +71,14 @@ export function TranscriptEditor({
         placeholder={PLACEHOLDER}
         maxLength={MAX_LENGTH}
         rows={12}
-        className={`mt-2 block w-full resize-y rounded-lg border bg-zinc-800/50 px-3 py-2.5 font-mono text-sm leading-6 text-zinc-100 placeholder:text-zinc-500 focus:ring-2 focus:outline-none ${
+        className={`mt-2 block w-full resize-y rounded-lg border bg-zinc-50 px-3 py-2.5 font-mono text-sm leading-6 text-zinc-900 placeholder:text-zinc-500 focus:ring-2 focus:outline-none ${
           error
-            ? "border-red-500 hover:border-red-400 focus:border-red-400 focus:ring-red-400/70"
-            : "border-zinc-600/80 hover:border-zinc-500 focus:border-indigo-400 focus:ring-indigo-400/60"
+            ? "border-red-500 hover:border-red-600 focus:border-red-600 focus:ring-red-500/50"
+            : "border-zinc-300 hover:border-zinc-400 focus:border-indigo-500 focus:ring-indigo-500/50"
         }`}
       />
       {error !== undefined && (
-        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-300">
+        <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-red-700">
           {error}
         </p>
       )}

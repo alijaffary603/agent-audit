@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
-  /* Softer charcoal than pure black, so panels can sit above the page. */
-  --background: #111114;
-  --foreground: #fafafa;
+  color-scheme: light;
+  /* Soft neutral page so white panels read as raised surfaces. */
+  --background: #f6f6f7;
+  --foreground: #18181b;
 }
 
 @theme inline {

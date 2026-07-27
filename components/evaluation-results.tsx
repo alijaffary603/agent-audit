@@ -12,20 +12,20 @@ import type { EvaluationResult, IssueSeverity, Verdict } from "@/lib/schemas";
 
 /** Status treatments pair color with an always-visible text label. */
 const VERDICT_STYLES: Record<Verdict, string> = {
-  pass: "border-emerald-900/60 bg-emerald-950/40 text-emerald-300",
-  needs_improvement: "border-amber-900/60 bg-amber-950/40 text-amber-300",
-  fail: "border-red-900/60 bg-red-950/40 text-red-300",
+  pass: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  needs_improvement: "border-amber-300 bg-amber-50 text-amber-800",
+  fail: "border-red-300 bg-red-50 text-red-800",
 };
 
 const SEVERITY_STYLES: Record<IssueSeverity, string> = {
-  critical: "border-red-900/60 bg-red-950/40 text-red-300",
-  high: "border-orange-900/60 bg-orange-950/40 text-orange-300",
-  medium: "border-amber-900/60 bg-amber-950/40 text-amber-300",
-  low: "border-zinc-600 bg-zinc-700/40 text-zinc-200",
+  critical: "border-red-300 bg-red-50 text-red-800",
+  high: "border-orange-300 bg-orange-50 text-orange-800",
+  medium: "border-amber-300 bg-amber-50 text-amber-800",
+  low: "border-zinc-300 bg-zinc-100 text-zinc-700",
 };
 
 const COPY_ACTION_CLASS =
-  "rounded-md border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400";
+  "rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
 
 const COPY_FAILURE_MESSAGE =
   "Could not copy to the clipboard. Please try again.";
@@ -37,19 +37,19 @@ type CopyTarget = "audit" | "response";
 
 /** Bar fill mirrors the verdict thresholds; the number always sits beside it. */
 function scoreBarClass(value: number): string {
-  if (value >= 80) return "bg-emerald-400";
-  if (value >= 50) return "bg-amber-400";
-  return "bg-red-400";
+  if (value >= 80) return "bg-emerald-600";
+  if (value >= 50) return "bg-amber-600";
+  return "bg-red-600";
 }
 
 function ScoreMeter({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-sm text-zinc-200">{label}</span>
-        <span className="text-sm font-medium text-zinc-100 tabular-nums">
+        <span className="text-sm text-zinc-700">{label}</span>
+        <span className="text-sm font-medium text-zinc-900 tabular-nums">
           {value}
-          <span className="font-normal text-zinc-400">/100</span>
+          <span className="font-normal text-zinc-600">/100</span>
         </span>
       </div>
       <div
@@ -58,7 +58,7 @@ function ScoreMeter({ label, value }: { label: string; value: number }) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={value}
-        className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-700/70"
+        className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200"
       >
         <div
           className={`h-full rounded-full ${scoreBarClass(value)}`}
@@ -142,18 +142,18 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
         {copyFailed ? (
           <p
             role="alert"
-            className="mt-2 text-xs leading-5 break-words text-red-300"
+            className="mt-2 text-xs leading-5 break-words text-red-700"
           >
             {COPY_FAILURE_MESSAGE}
           </p>
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-zinc-700/70 bg-zinc-800/40 p-4 sm:p-5">
+      <div className="rounded-lg border border-zinc-300 bg-zinc-100 p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-4xl font-semibold tracking-tight text-zinc-50 tabular-nums">
+          <p className="text-4xl font-semibold tracking-tight text-zinc-900 tabular-nums">
             {result.overallScore}
-            <span className="text-lg font-normal text-zinc-400">/100</span>
+            <span className="text-lg font-normal text-zinc-600">/100</span>
           </p>
           <p
             className={`rounded-full border px-3 py-1 text-sm font-medium ${VERDICT_STYLES[result.verdict]}`}
@@ -161,14 +161,14 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
             {VERDICT_LABELS[result.verdict]}
           </p>
         </div>
-        <p className="mt-3 text-sm leading-6 break-words text-zinc-200">
+        <p className="mt-3 text-sm leading-6 break-words text-zinc-700">
           {result.summary}
         </p>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-zinc-100">Dimension scores</h3>
-        <div className="mt-3 space-y-4 rounded-lg border border-zinc-700/70 bg-zinc-800/40 p-4">
+        <h3 className="text-sm font-semibold text-zinc-900">Dimension scores</h3>
+        <div className="mt-3 space-y-4 rounded-lg border border-zinc-300 bg-zinc-100 p-4">
           {SCORE_DIMENSIONS.map(({ key, label }) => (
             <ScoreMeter key={key} label={label} value={result.scores[key]} />
           ))}
@@ -176,11 +176,11 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-zinc-100">
+        <h3 className="text-sm font-semibold text-zinc-900">
           Evidence-backed findings
         </h3>
         {result.issues.length === 0 ? (
-          <p className="mt-3 rounded-lg border border-zinc-700/70 bg-zinc-800/40 px-4 py-3 text-sm leading-6 text-zinc-300">
+          <p className="mt-3 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm leading-6 text-zinc-700">
             No evidence-backed issues were found.
           </p>
         ) : (
@@ -188,21 +188,21 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
             {result.issues.map((issue, index) => (
               <li
                 key={index}
-                className="rounded-lg border border-zinc-700/70 bg-zinc-800/40 p-4"
+                className="rounded-lg border border-zinc-300 bg-zinc-100 p-4"
               >
                 <p
                   className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${SEVERITY_STYLES[issue.severity]}`}
                 >
                   {SEVERITY_LABELS[issue.severity]}
                 </p>
-                <blockquote className="mt-3 border-l-2 border-zinc-500 bg-zinc-900/40 py-1.5 pl-3 font-mono text-sm leading-6 break-words whitespace-pre-wrap text-zinc-100">
+                <blockquote className="mt-3 border-l-2 border-zinc-400 bg-white py-1.5 pl-3 font-mono text-sm leading-6 break-words whitespace-pre-wrap text-zinc-900">
                   {issue.quote}
                 </blockquote>
-                <p className="mt-3 text-sm leading-6 break-words text-zinc-200">
+                <p className="mt-3 text-sm leading-6 break-words text-zinc-700">
                   {issue.explanation}
                 </p>
-                <p className="mt-2 text-sm leading-6 break-words text-zinc-300">
-                  <span className="font-medium text-zinc-200">
+                <p className="mt-2 text-sm leading-6 break-words text-zinc-700">
+                  <span className="font-medium text-zinc-900">
                     Recommendation:
                   </span>{" "}
                   {issue.recommendation}
@@ -214,12 +214,12 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-zinc-100">Stronger response</h3>
-        <p className="mt-1 text-xs leading-5 text-zinc-400">
+        <h3 className="text-sm font-semibold text-zinc-900">Stronger response</h3>
+        <p className="mt-1 text-xs leading-5 text-zinc-600">
           A suggested response addressing the most important opportunity
           identified in the audit.
         </p>
-        <p className="mt-2 rounded-lg border border-zinc-700/70 bg-zinc-800/40 p-4 text-sm leading-6 break-words whitespace-pre-wrap text-zinc-100">
+        <p className="mt-2 rounded-lg border border-zinc-300 bg-zinc-100 p-4 text-sm leading-6 break-words whitespace-pre-wrap text-zinc-900">
           {result.betterResponse}
         </p>
       </div>
