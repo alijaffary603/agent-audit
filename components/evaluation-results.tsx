@@ -1,23 +1,20 @@
-import type { EvaluationResult, IssueSeverity, Verdict } from "@/lib/schemas";
+"use client";
 
-const VERDICT_LABELS: Record<Verdict, string> = {
-  pass: "Pass",
-  needs_improvement: "Needs improvement",
-  fail: "Fail",
-};
+import { useEffect, useRef, useState } from "react";
+
+import {
+  SCORE_DIMENSIONS,
+  SEVERITY_LABELS,
+  VERDICT_LABELS,
+  formatEvaluationResult,
+} from "@/lib/evaluation-export";
+import type { EvaluationResult, IssueSeverity, Verdict } from "@/lib/schemas";
 
 /** Status treatments pair color with an always-visible text label. */
 const VERDICT_STYLES: Record<Verdict, string> = {
   pass: "border-emerald-900/60 bg-emerald-950/40 text-emerald-300",
   needs_improvement: "border-amber-900/60 bg-amber-950/40 text-amber-300",
   fail: "border-red-900/60 bg-red-950/40 text-red-300",
-};
-
-const SEVERITY_LABELS: Record<IssueSeverity, string> = {
-  critical: "Critical",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
 };
 
 const SEVERITY_STYLES: Record<IssueSeverity, string> = {
@@ -27,15 +24,16 @@ const SEVERITY_STYLES: Record<IssueSeverity, string> = {
   low: "border-zinc-700 bg-zinc-900 text-zinc-300",
 };
 
-const SCORE_DIMENSIONS: readonly {
-  key: keyof EvaluationResult["scores"];
-  label: string;
-}[] = [
-  { key: "goalCompletion", label: "Goal completion" },
-  { key: "communication", label: "Communication" },
-  { key: "accuracy", label: "Accuracy" },
-  { key: "professionalism", label: "Professionalism" },
-];
+const COPY_ACTION_CLASS =
+  "rounded-md border border-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300";
+
+const COPY_FAILURE_MESSAGE =
+  "Could not copy to the clipboard. Please try again.";
+
+/** How long a "copied" label stays before reverting. */
+const COPIED_RESET_MS = 2000;
+
+type CopyTarget = "audit" | "response";
 
 /** Bar fill mirrors the verdict thresholds; the number always sits beside it. */
 function scoreBarClass(value: number): string {
@@ -73,12 +71,81 @@ function ScoreMeter({ label, value }: { label: string; value: number }) {
 
 /**
  * Renders a complete, validated EvaluationResult: overall verdict, dimension
- * scores, evidence-backed findings in server order, and the suggested
- * stronger response. Pure presentation — no state, no fetching.
+ * scores, evidence-backed findings in server order, the suggested stronger
+ * response, and clipboard actions for the report and that response.
  */
 export function EvaluationResults({ result }: { result: EvaluationResult }) {
+  const [copied, setCopied] = useState<CopyTarget | null>(null);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Never let a pending reset fire after the results are gone.
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current !== null) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  async function copyToClipboard(target: CopyTarget, text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // The failure itself is never logged or surfaced beyond this message.
+      setCopied(null);
+      setCopyFailed(true);
+      return;
+    }
+    setCopyFailed(false);
+    setCopied(target);
+    if (resetTimeoutRef.current !== null) {
+      clearTimeout(resetTimeoutRef.current);
+    }
+    resetTimeoutRef.current = setTimeout(() => {
+      setCopied(null);
+      resetTimeoutRef.current = null;
+    }, COPIED_RESET_MS);
+  }
+
   return (
     <div className="mt-4 space-y-6">
+      <div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              copyToClipboard("audit", formatEvaluationResult(result))
+            }
+            className={COPY_ACTION_CLASS}
+          >
+            {copied === "audit" ? "Audit copied" : "Copy audit"}
+          </button>
+          <button
+            type="button"
+            onClick={() => copyToClipboard("response", result.betterResponse)}
+            className={COPY_ACTION_CLASS}
+          >
+            {copied === "response"
+              ? "Response copied"
+              : "Copy stronger response"}
+          </button>
+        </div>
+        <p role="status" aria-live="polite" className="sr-only">
+          {copied === "audit"
+            ? "Audit copied to the clipboard."
+            : copied === "response"
+              ? "Stronger response copied to the clipboard."
+              : ""}
+        </p>
+        {copyFailed ? (
+          <p role="alert" className="mt-2 text-xs leading-5 text-red-300">
+            {COPY_FAILURE_MESSAGE}
+          </p>
+        ) : null}
+      </div>
+
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-4xl font-semibold tracking-tight text-zinc-50 tabular-nums">
