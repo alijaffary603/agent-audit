@@ -33,3 +33,19 @@ AgentAudit will eventually need to sit close to real conversations, but the MVP 
 **Success criteria are written before the code.** The scope doc commits to what "works" means — evidence-anchored findings, planted-failure detection, re-run consistency — so the MVP gets judged against pre-committed goals rather than post-hoc rationalization.
 
 **Schema and architecture are deliberately deferred.** Locking a response schema before seeing real reports would freeze today's guesses; both land in later milestones once the product shape is validated.
+
+## 2026-07-26 — Milestone 3: Evaluation contract
+
+### Decision: fix the evaluation contract before the UI or model integration exists
+
+[docs/evaluation-schema.md](docs/evaluation-schema.md) defines the full request/response contract — categories, goal, transcript in; scores, verdict, evidence-quoted issues, and a rewritten better response out. Defining it now, ahead of any code, is deliberate:
+
+**Both sides get a fixed target.** The report UI renders a known shape and the evaluator gets explicit output rules. Neither has to guess at the other, and neither can quietly drift while being built.
+
+**The hallucination guard becomes mechanical.** Requiring every issue quote to be a verbatim transcript substring turns "the evaluator must not invent evidence" from a hope into a string-containment check that code can enforce and tests can assert.
+
+**Grades cannot be curved later.** Verdict thresholds (80/50) and integer scoring are committed before any real model output exists, so the bar is set in advance rather than adjusted to flatter early results.
+
+**The contract operationalizes Milestone 2's success criteria.** Evidence-anchored findings map to the quote rule; re-run consistency is measurable because scores are integers on fixed scales; strong conversations are handled explicitly (an empty issues array is valid, not an error).
+
+**It is still not architecture.** The contract is transport- and model-agnostic — nothing here chooses endpoints, frameworks, or providers, so those decisions remain open for the milestones that own them.
