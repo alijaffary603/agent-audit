@@ -58,7 +58,7 @@ function ScoreMeter({ label, value }: { label: string; value: number }) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={value}
-        className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200"
+        className="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-200"
       >
         <div
           className={`h-full rounded-full ${scoreBarClass(value)}`}
@@ -149,7 +149,7 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-zinc-300 bg-zinc-100 p-4 sm:p-5">
+      <div className="rounded-xl border border-zinc-300 bg-zinc-100 p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-4xl font-semibold tracking-tight text-zinc-900 tabular-nums">
             {result.overallScore}
@@ -167,8 +167,10 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-zinc-900">Dimension scores</h3>
-        <div className="mt-3 space-y-4 rounded-lg border border-zinc-300 bg-zinc-100 p-4">
+        <h3 className="text-sm font-semibold text-zinc-900">
+          Dimension scores
+        </h3>
+        <div className="mt-3 space-y-4 rounded-xl border border-zinc-300 bg-zinc-100 p-4">
           {SCORE_DIMENSIONS.map(({ key, label }) => (
             <ScoreMeter key={key} label={label} value={result.scores[key]} />
           ))}
@@ -180,7 +182,7 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
           Evidence-backed findings
         </h3>
         {result.issues.length === 0 ? (
-          <p className="mt-3 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm leading-6 text-zinc-700">
+          <p className="mt-3 rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm leading-6 text-zinc-700">
             No evidence-backed issues were found.
           </p>
         ) : (
@@ -188,7 +190,7 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
             {result.issues.map((issue, index) => (
               <li
                 key={index}
-                className="rounded-lg border border-zinc-300 bg-zinc-100 p-4"
+                className="rounded-xl border border-zinc-300 bg-zinc-100 p-4"
               >
                 <p
                   className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${SEVERITY_STYLES[issue.severity]}`}
@@ -214,12 +216,14 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-zinc-900">Stronger response</h3>
+        <h3 className="text-sm font-semibold text-zinc-900">
+          Stronger response
+        </h3>
         <p className="mt-1 text-xs leading-5 text-zinc-600">
           A suggested response addressing the most important opportunity
           identified in the audit.
         </p>
-        <p className="mt-2 rounded-lg border border-zinc-300 bg-zinc-100 p-4 text-sm leading-6 break-words whitespace-pre-wrap text-zinc-900">
+        <p className="mt-2 rounded-xl border border-zinc-300 bg-zinc-100 p-4 text-sm leading-6 break-words whitespace-pre-wrap text-zinc-900">
           {result.betterResponse}
         </p>
       </div>

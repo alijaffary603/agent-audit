@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
+import { AgentAuditHero } from "@/components/agent-audit-hero";
 import { AgentGoalInput } from "@/components/agent-goal-input";
 import { CategorySelector } from "@/components/category-selector";
 import { EvaluationResults } from "@/components/evaluation-results";
@@ -171,7 +172,10 @@ export default function Home() {
     setIsSubmitting(true);
 
     try {
-      const result = await requestEvaluation(validation.data, controller.signal);
+      const result = await requestEvaluation(
+        validation.data,
+        controller.signal,
+      );
       if (abortControllerRef.current !== controller) return;
       setEvaluationResult(result);
     } catch (error) {
@@ -217,128 +221,131 @@ export default function Home() {
     category === "customer_support" && agentGoal === "" && transcript === "";
 
   return (
-    <div
-      className={`mx-auto flex w-full flex-1 flex-col px-4 py-8 transition-[max-width] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:px-6 sm:py-10 lg:px-10 ${
-        hasStartedAudit ? "max-w-6xl" : "max-w-2xl"
-      }`}
-    >
-      <header className="border-b border-zinc-300 pb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
-          AgentAudit
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-          Paste an AI agent conversation transcript and get a structured,
-          evidence-backed audit of how the agent performed.
-        </p>
-      </header>
+    <>
+      <AgentAuditHero />
 
-      {/*
+      <div
+        id="audit-workspace"
+        className={`mx-auto flex w-full flex-1 scroll-mt-10 flex-col px-4 pt-6 pb-20 transition-[max-width] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:px-6 sm:pt-8 sm:pb-24 lg:px-10 ${
+          hasStartedAudit ? "max-w-6xl" : "max-w-2xl"
+        }`}
+      >
+        {/* The hero introduces the product, so this only marks the workspace. */}
+        <div className="flex items-center gap-4 pb-6">
+          <p className="text-xs font-semibold tracking-[0.14em] text-zinc-500 uppercase">
+            Audit workspace
+          </p>
+          <span aria-hidden="true" className="h-px flex-1 bg-zinc-200" />
+        </div>
+
+        {/*
         The second track animates open from zero width instead of the column
         count flipping, so the form panel never snaps to half width before
         settling.
       */}
-      <main
-        className={`mt-8 grid flex-1 transition-[grid-template-columns,gap] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-          hasStartedAudit
-            ? "gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8"
-            : "gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,0fr)]"
-        }`}
-      >
-        <section
-          aria-labelledby="conversation-input-heading"
-          className="flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
+        <main
+          className={`mt-8 grid flex-1 transition-[grid-template-columns,gap] duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+            hasStartedAudit
+              ? "gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8"
+              : "gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,0fr)]"
+          }`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <h2
-              id="conversation-input-heading"
-              className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
-            >
-              Conversation Input
-            </h2>
-            <button
-              type="button"
-              onClick={clearConversation}
-              disabled={isPristine || isSubmitting}
-              className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 enabled:hover:border-zinc-400 enabled:hover:bg-zinc-100 enabled:hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Clear conversation
-            </button>
-          </div>
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            aria-busy={isSubmitting}
-            className="mt-4"
-          >
-            <fieldset
-              disabled={isSubmitting}
-              className="space-y-4 disabled:opacity-80"
-            >
-              <SampleSelector onSelect={applySample} />
-              <CategorySelector
-                ref={categoryRef}
-                value={category}
-                onChange={handleCategoryChange}
-                error={fieldErrors.category}
-              />
-              <AgentGoalInput
-                ref={agentGoalRef}
-                value={agentGoal}
-                onChange={handleAgentGoalChange}
-                error={fieldErrors.agentGoal}
-              />
-              <TranscriptEditor
-                ref={transcriptRef}
-                value={transcript}
-                onChange={handleTranscriptChange}
-                error={fieldErrors.transcript}
-              />
-              <button
-                type="submit"
-                className="block w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? "Running audit…" : "Run audit"}
-              </button>
-            </fieldset>
-          </form>
-        </section>
-
-        {hasStartedAudit ? (
           <section
-            ref={resultsRef}
-            aria-labelledby="evaluation-results-heading"
-            className="results-enter flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
+            aria-labelledby="conversation-input-heading"
+            className="flex min-h-64 min-w-0 flex-col rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(24,24,27,0.04),0_16px_40px_-24px_rgba(24,24,27,0.18)] sm:p-6"
           >
-            <h2
-              id="evaluation-results-heading"
-              className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <h2
+                id="conversation-input-heading"
+                className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
+              >
+                Conversation Input
+              </h2>
+              <button
+                type="button"
+                onClick={clearConversation}
+                disabled={isPristine || isSubmitting}
+                className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 enabled:hover:border-zinc-400 enabled:hover:bg-zinc-100 enabled:hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Clear conversation
+              </button>
+            </div>
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              aria-busy={isSubmitting}
+              className="mt-4"
             >
-              Evaluation Results
-            </h2>
-            {isSubmitting ? (
-              <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
-                <p role="status" className="text-sm text-zinc-800">
-                  Evaluating the conversation…
-                </p>
-              </div>
-            ) : submissionError !== null ? (
-              <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3">
-                <p role="alert" className="text-sm break-words text-red-800">
-                  {submissionError}
-                </p>
-              </div>
-            ) : evaluationResult !== null ? (
-              <EvaluationResults result={evaluationResult} />
-            ) : (
-              <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-300">
-                <p className="px-6 py-10 text-center text-sm text-zinc-600">
-                  The audit report will render here.
-                </p>
-              </div>
-            )}
+              <fieldset
+                disabled={isSubmitting}
+                className="space-y-4 disabled:opacity-80"
+              >
+                <SampleSelector onSelect={applySample} />
+                <CategorySelector
+                  ref={categoryRef}
+                  value={category}
+                  onChange={handleCategoryChange}
+                  error={fieldErrors.category}
+                />
+                <AgentGoalInput
+                  ref={agentGoalRef}
+                  value={agentGoal}
+                  onChange={handleAgentGoalChange}
+                  error={fieldErrors.agentGoal}
+                />
+                <TranscriptEditor
+                  ref={transcriptRef}
+                  value={transcript}
+                  onChange={handleTranscriptChange}
+                  error={fieldErrors.transcript}
+                />
+                <button
+                  type="submit"
+                  className="block w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? "Running audit…" : "Run audit"}
+                </button>
+              </fieldset>
+            </form>
           </section>
-        ) : null}
-      </main>
-    </div>
+
+          {hasStartedAudit ? (
+            <section
+              ref={resultsRef}
+              aria-labelledby="evaluation-results-heading"
+              className="results-enter flex min-h-64 min-w-0 flex-col rounded-xl border border-zinc-300 bg-white p-5 shadow-sm sm:p-6"
+            >
+              <h2
+                id="evaluation-results-heading"
+                className="text-sm font-semibold tracking-wide text-zinc-900 uppercase"
+              >
+                Evaluation Results
+              </h2>
+              {isSubmitting ? (
+                <div className="mt-4 rounded-lg border border-zinc-300 bg-zinc-100 px-4 py-3">
+                  <p role="status" className="text-sm text-zinc-800">
+                    Evaluating the conversation…
+                  </p>
+                </div>
+              ) : submissionError !== null ? (
+                <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3">
+                  <p role="alert" className="text-sm break-words text-red-800">
+                    {submissionError}
+                  </p>
+                </div>
+              ) : evaluationResult !== null ? (
+                <EvaluationResults result={evaluationResult} />
+              ) : (
+                <div className="mt-4 flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-300">
+                  <p className="px-6 py-10 text-center text-sm text-zinc-600">
+                    The audit report will render here.
+                  </p>
+                </div>
+              )}
+            </section>
+          ) : null}
+        </main>
+      </div>
+    </>
   );
 }
