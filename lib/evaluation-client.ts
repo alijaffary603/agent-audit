@@ -39,6 +39,7 @@ const KNOWN_ERROR_CODES = [
   "invalid_request",
   "configuration_error",
   "rate_limited",
+  "rate_limit_exceeded",
   "evaluation_failed",
   "service_unavailable",
   "internal_error",

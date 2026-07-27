@@ -7,9 +7,18 @@ import {
 } from "@/lib/evaluation-verification";
 import { EvaluationResponseError, evaluateConversation } from "@/lib/evaluator";
 import { OpenAIConfigurationError } from "@/lib/openai";
+import {
+  RateLimitConfigurationError,
+  RateLimitUnavailableError,
+  checkRateLimits,
+  getClientIdentifier,
+} from "@/lib/rate-limit";
 import { validateEvaluationRequest } from "@/lib/request-validation";
 
 export const runtime = "nodejs";
+
+/** Sits above the evaluator's own upstream timeout so it can abort first. */
+export const maxDuration = 40;
 
 /** Maximum request size, measured in UTF-8 bytes. */
 const MAX_BODY_BYTES = 256 * 1024;
@@ -23,7 +32,10 @@ const TEMPORARY_UPSTREAM_STATUSES = new Set([408, 409, 500, 502, 503, 504]);
  * transcripts, model responses, or issue quotes ever leave this boundary.
  */
 function mapEvaluationError(error: unknown): Response {
-  if (error instanceof OpenAIConfigurationError) {
+  if (
+    error instanceof OpenAIConfigurationError ||
+    error instanceof RateLimitConfigurationError
+  ) {
     return evaluationErrorResponse(
       503,
       "configuration_error",
@@ -38,6 +50,13 @@ function mapEvaluationError(error: unknown): Response {
       502,
       "evaluation_failed",
       "The evaluator could not produce a valid result. Please try again.",
+    );
+  }
+  if (error instanceof RateLimitUnavailableError) {
+    return evaluationErrorResponse(
+      503,
+      "service_unavailable",
+      "The evaluation service is temporarily unavailable. Please try again.",
     );
   }
   if (error instanceof RateLimitError) {
@@ -81,6 +100,18 @@ function mapEvaluationError(error: unknown): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  // Reject unsupported media types before touching the body, rate limiter,
+  // or evaluator. Parameters such as a charset are allowed.
+  const contentType = request.headers.get("content-type");
+  const mediaType = contentType?.split(";")[0]?.trim().toLowerCase();
+  if (mediaType !== "application/json") {
+    return evaluationErrorResponse(
+      415,
+      "invalid_json",
+      "The request must use application/json.",
+    );
+  }
+
   // Reject oversized payloads from the declared length before reading the
   // body — but never trust Content-Length as the only size check.
   const declaredLength = request.headers.get("content-length");
@@ -133,8 +164,24 @@ export async function POST(request: Request): Promise<Response> {
       400,
       "invalid_request",
       "Check the highlighted fields and try again.",
-      validation.errors,
+      { fieldErrors: validation.errors },
     );
+  }
+
+  // Only well-formed, schema-valid requests consume the allowance, and every
+  // limit must pass before the evaluator is reached.
+  try {
+    const decision = await checkRateLimits(getClientIdentifier(request));
+    if (!decision.allowed) {
+      return evaluationErrorResponse(
+        429,
+        "rate_limit_exceeded",
+        "You have reached the audit limit. Please try again later.",
+        { headers: decision.headers },
+      );
+    }
+  } catch (error) {
+    return mapEvaluationError(error);
   }
 
   try {

@@ -11,6 +11,7 @@ export type EvaluationApiErrorCode =
   | "invalid_request"
   | "configuration_error"
   | "rate_limited"
+  | "rate_limit_exceeded"
   | "evaluation_failed"
   | "service_unavailable"
   | "internal_error";
@@ -23,6 +24,12 @@ export type EvaluationApiErrorBody = {
   };
 };
 
+type ErrorResponseOptions = {
+  fieldErrors?: EvaluationFieldErrors;
+  /** Extra safe headers, such as rate-limit metadata. */
+  headers?: Record<string, string>;
+};
+
 /**
  * Builds a consistent JSON error response. Every response is marked
  * `Cache-Control: no-store` — evaluation traffic must never be cached.
@@ -31,13 +38,17 @@ export function evaluationErrorResponse(
   status: number,
   code: EvaluationApiErrorCode,
   message: string,
-  fieldErrors?: EvaluationFieldErrors,
+  options: ErrorResponseOptions = {},
 ): Response {
+  const { fieldErrors, headers } = options;
   const body: EvaluationApiErrorBody = {
-    error: fieldErrors === undefined ? { code, message } : { code, message, fieldErrors },
+    error:
+      fieldErrors === undefined
+        ? { code, message }
+        : { code, message, fieldErrors },
   };
   return Response.json(body, {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: { ...headers, "Cache-Control": "no-store" },
   });
 }

@@ -15,6 +15,9 @@ import {
  * message is deliberately generic: it must never carry transcript content,
  * prompts, or model output.
  */
+/** Upstream request budget, kept below the route's own maxDuration. */
+const EVALUATION_TIMEOUT_MS = 30_000;
+
 export class EvaluationResponseError extends Error {
   constructor(message: string) {
     super(message);
@@ -47,15 +50,21 @@ export async function evaluateConversation(
 ): Promise<EvaluationResult> {
   const prompt = buildEvaluatorPrompt(request);
 
-  const response = await getOpenAIClient().responses.parse({
-    model: getOpenAIModel(),
-    instructions: prompt.instructions,
-    input: prompt.input,
-    store: false,
-    text: {
-      format: zodTextFormat(EvaluationResultSchema, "agent_audit_evaluation"),
+  const response = await getOpenAIClient().responses.parse(
+    {
+      model: getOpenAIModel(),
+      instructions: prompt.instructions,
+      input: prompt.input,
+      store: false,
+      text: {
+        format: zodTextFormat(EvaluationResultSchema, "agent_audit_evaluation"),
+      },
     },
-  });
+    // Aborts the upstream request rather than holding the route open; the
+    // SDK surfaces this as a connection timeout, which the route maps to its
+    // temporary-unavailability response.
+    { timeout: EVALUATION_TIMEOUT_MS },
+  );
 
   const result = response.output_parsed;
   if (result === null || result === undefined) {
