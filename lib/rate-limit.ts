@@ -162,10 +162,14 @@ function blockedHeaders(limit: number, reset: number): Record<string, string> {
 /**
  * Applies the burst, per-IP daily, and global daily limits.
  *
- * All three run in parallel and every one must pass; the first exceeded limit
- * (in that fixed order) supplies the response headers, so the outcome is
- * deterministic. Nothing here is retried, and no identifier, key, or backend
- * error is ever exposed.
+ * The two per-IP limits run in parallel, and the shared global bucket is only
+ * charged once both pass. That ordering matters: charging it up front would
+ * let a single blocked caller drain the whole application's daily allowance
+ * and lock everyone else out.
+ *
+ * The outcome is deterministic — the first exceeded limit, in that order,
+ * supplies the response headers. Nothing here is retried, and no identifier,
+ * key, or backend error is ever exposed.
  *
  * Local development without credentials is allowed through so the project
  * stays runnable; any deployed environment fails closed instead.
@@ -183,12 +187,11 @@ export async function checkRateLimits(
     throw error;
   }
 
-  let burst, dailyIp, dailyGlobal;
+  let burst, dailyIp;
   try {
-    [burst, dailyIp, dailyGlobal] = await Promise.all([
+    [burst, dailyIp] = await Promise.all([
       active.burst.limit(identifier),
       active.dailyIp.limit(identifier),
-      active.dailyGlobal.limit(GLOBAL_IDENTIFIER),
     ]);
   } catch {
     // The backend failed: block rather than allow unmetered evaluations.
@@ -197,13 +200,30 @@ export async function checkRateLimits(
     );
   }
 
-  for (const result of [burst, dailyIp, dailyGlobal]) {
+  for (const result of [burst, dailyIp]) {
     if (!result.success) {
       return {
         allowed: false,
         headers: blockedHeaders(result.limit, result.reset),
       };
     }
+  }
+
+  // Reached only by callers within their own limits, so one caller can never
+  // exhaust the shared budget on requests that were rejected anyway.
+  let dailyGlobal;
+  try {
+    dailyGlobal = await active.dailyGlobal.limit(GLOBAL_IDENTIFIER);
+  } catch {
+    throw new RateLimitUnavailableError(
+      "The rate-limit service is unavailable.",
+    );
+  }
+  if (!dailyGlobal.success) {
+    return {
+      allowed: false,
+      headers: blockedHeaders(dailyGlobal.limit, dailyGlobal.reset),
+    };
   }
   return { allowed: true };
 }
