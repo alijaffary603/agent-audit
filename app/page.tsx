@@ -20,6 +20,15 @@ export default function Home() {
     setTranscript(sample.transcript);
   }
 
+  function clearConversation() {
+    setCategory("customer_support");
+    setAgentGoal("");
+    setTranscript("");
+  }
+
+  const isPristine =
+    category === "customer_support" && agentGoal === "" && transcript === "";
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-10 sm:px-10">
       <header className="border-b border-zinc-800 pb-6">
@@ -37,12 +46,22 @@ export default function Home() {
           aria-labelledby="conversation-input-heading"
           className="flex min-h-64 flex-col rounded-xl border border-zinc-800 bg-zinc-900/40 p-6"
         >
-          <h2
-            id="conversation-input-heading"
-            className="text-sm font-medium tracking-wide text-zinc-200 uppercase"
-          >
-            Conversation Input
-          </h2>
+          <div className="flex items-center justify-between gap-4">
+            <h2
+              id="conversation-input-heading"
+              className="text-sm font-medium tracking-wide text-zinc-200 uppercase"
+            >
+              Conversation Input
+            </h2>
+            <button
+              type="button"
+              onClick={clearConversation}
+              disabled={isPristine}
+              className="rounded-md border border-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-400 enabled:hover:border-zinc-600 enabled:hover:text-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Clear conversation
+            </button>
+          </div>
           <div className="mt-4 space-y-4">
             <SampleSelector onSelect={applySample} />
             <CategorySelector value={category} onChange={setCategory} />
