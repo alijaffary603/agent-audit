@@ -138,7 +138,7 @@ The unit suite covers the request and result schemas, verdict thresholds, eviden
 ## Limitations
 
 - One conversation at a time. There is no audit history — refreshing the page clears the result.
-- You supply your own OpenAI API key and model; API usage is billed to your account.
+- Running AgentAudit requires an OpenAI API key and model, billed to whoever deploys it. Visitors to a deployment do not supply their own key; they share that deployment's rate-limited allowance.
 - Evaluations are model judgments and are not deterministic. Re-running the same transcript can produce different wording and somewhat different scores.
 - Quote authenticity and severity ordering are verified mechanically. Scores, explanations, and recommendations are not independently verified.
 - Input is plain text with speaker-labelled lines. There is no audio, telephony, or live-call support.
