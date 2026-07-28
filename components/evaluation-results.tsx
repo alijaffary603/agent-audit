@@ -10,19 +10,39 @@ import {
 } from "@/lib/evaluation-export";
 import type { EvaluationResult, IssueSeverity, Verdict } from "@/lib/schemas";
 
-/** Status treatments pair color with an always-visible text label. */
-const VERDICT_STYLES: Record<Verdict, string> = {
-  pass: "border-emerald-300 bg-emerald-50 text-emerald-800",
-  needs_improvement: "border-amber-300 bg-amber-50 text-amber-800",
-  fail: "border-red-300 bg-red-50 text-red-800",
+/**
+ * Status is a small color dot beside a plain text label. The label is always
+ * present, so color stays a secondary cue rather than the carrier of meaning.
+ */
+const VERDICT_DOTS: Record<Verdict, string> = {
+  pass: "bg-emerald-600",
+  needs_improvement: "bg-amber-500",
+  fail: "bg-red-600",
 };
 
-const SEVERITY_STYLES: Record<IssueSeverity, string> = {
-  critical: "border-red-300 bg-red-50 text-red-800",
-  high: "border-orange-300 bg-orange-50 text-orange-800",
-  medium: "border-amber-300 bg-amber-50 text-amber-800",
-  low: "border-zinc-300 bg-zinc-100 text-zinc-700",
+const SEVERITY_DOTS: Record<IssueSeverity, string> = {
+  critical: "bg-red-600",
+  high: "bg-orange-500",
+  medium: "bg-amber-500",
+  low: "bg-zinc-400",
 };
+
+/** Severity also tints the finding's left rule, so a card reads at a glance. */
+const SEVERITY_RULES: Record<IssueSeverity, string> = {
+  critical: "border-l-red-500",
+  high: "border-l-orange-400",
+  medium: "border-l-amber-400",
+  low: "border-l-zinc-400",
+};
+
+function StatusLabel({ dotClass, label }: { dotClass: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 text-xs font-medium tracking-[0.08em] text-zinc-700 uppercase">
+      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+      {label}
+    </span>
+  );
+}
 
 const COPY_ACTION_CLASS =
   "rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
@@ -155,11 +175,10 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
             {result.overallScore}
             <span className="text-lg font-normal text-zinc-600">/100</span>
           </p>
-          <p
-            className={`rounded-full border px-3 py-1 text-sm font-medium ${VERDICT_STYLES[result.verdict]}`}
-          >
-            {VERDICT_LABELS[result.verdict]}
-          </p>
+          <StatusLabel
+            dotClass={VERDICT_DOTS[result.verdict]}
+            label={VERDICT_LABELS[result.verdict]}
+          />
         </div>
         <p className="mt-3 text-sm leading-6 break-words text-zinc-700">
           {result.summary}
@@ -190,13 +209,12 @@ export function EvaluationResults({ result }: { result: EvaluationResult }) {
             {result.issues.map((issue, index) => (
               <li
                 key={index}
-                className="rounded-xl border border-zinc-300 bg-zinc-100 p-4"
+                className={`rounded-xl border border-l-2 border-zinc-300 bg-zinc-100 p-4 ${SEVERITY_RULES[issue.severity]}`}
               >
-                <p
-                  className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${SEVERITY_STYLES[issue.severity]}`}
-                >
-                  {SEVERITY_LABELS[issue.severity]}
-                </p>
+                <StatusLabel
+                  dotClass={SEVERITY_DOTS[issue.severity]}
+                  label={SEVERITY_LABELS[issue.severity]}
+                />
                 <blockquote className="mt-3 border-l-2 border-zinc-400 bg-white py-1.5 pl-3 font-mono text-sm leading-6 break-words whitespace-pre-wrap text-zinc-900">
                   {issue.quote}
                 </blockquote>
